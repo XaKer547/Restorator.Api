@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -11,6 +12,7 @@ using Restorator.Domain.Services;
 using Restorator.Mail.Configuration;
 using Restorator.Mail.Services;
 using Restorator.Seeder.Extensions;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 
@@ -65,6 +67,9 @@ builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true
 
 builder.Services.AddSingleton(builder.Configuration.GetRequiredSection("SmtpConfiguration")
                                                    .Get<SmtpConfiguration>()!);
+
+CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("ru-RU");
+CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("ru-RU");
 
 builder.Services.AddAuthentication(x =>
 {

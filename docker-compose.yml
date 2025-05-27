@@ -1,25 +1,22 @@
 services:
-  web:
-    container_name: restorator.host
-    image: restorator.api:latest
+  restorator.api:
+    container_name: restorator.server
+    image: ${DOCKER_REGISTRY-}restoratorapi
     build:
       context: .
-      dockerfile: Dockerfile
-    ports:
-      - "7090:7090"
+      dockerfile: Restorator.API/Dockerfile
     depends_on:
-      - db
+    - db
     environment:
-      ConnectionStrings__DefaultConnection: "Server=db;Database=restorator;User Id=sa;Password=Qwerty123;TrustServerCertificate=true;Trusted_connection=false"
+      ConnectionStrings__LocalConnection: "Server=db;Database=restorator;User Id=sa;Password=Qwerty123;TrustServerCertificate=true;Trusted_connection=false"
 
   db:
     container_name: restorator.db
     image: mcr.microsoft.com/mssql/server:2019-latest
-    restart: on-failure
     environment:
       SA_PASSWORD: "Qwerty123"
       ACCEPT_EULA: "Y"
-    ports:
-      - "8612:1433"
     volumes:
       - ./db-data:/var/opt/mssql/data  
+    ports:
+      - "8612:1433"
