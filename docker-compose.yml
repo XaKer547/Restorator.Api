@@ -1,5 +1,7 @@
 services:
   web:
+    container_name: restorator.host
+    image: restorator.api:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,6 +13,7 @@ services:
       ConnectionStrings__DefaultConnection: "Server=db;Database=restorator;User Id=sa;Password=Qwerty123;TrustServerCertificate=true;Trusted_connection=false"
 
   db:
+    container_name: restorator.db
     image: mcr.microsoft.com/mssql/server:2019-latest
     restart: on-failure
     environment:

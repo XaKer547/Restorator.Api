@@ -11,7 +11,7 @@ COPY . .
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./Restorator.API/Restorator.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish -p:PublishTrimmed=true --runtime linux-x64 --self-contained true
+RUN dotnet publish "./Restorator.API/Restorator.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish -p:PublishTrimmed=false --runtime linux-x64 --self-contained true
 
 FROM base AS final
 WORKDIR /app
