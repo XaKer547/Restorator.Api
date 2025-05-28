@@ -120,42 +120,62 @@ namespace Restorator.Application.Services
             if (!_userManager.TryGetUserId(out var userId))
                 return Result.Fail("Не удалось получить id пользователя");
 
-            var predicate = PredicateBuilder.New<Reservation>(r => r.Restaurant.Id == model.RestaurantId
-                                                                   && !r.Canceled
-                                                                   && (model.ReservationStartDate >= r.ReservationStart
-                                                                        && model.ReservationStartDate <= r.ReservationEnd || model.ReservationEndDate >= r.ReservationStart
-                                                                                                                               && model.ReservationEndDate <= r.ReservationEnd));
+            var restaurant = await _context.Restaurants.AsNoTracking()
+                                                       .Include(x => x.Template)
+                                                       .SingleOrDefaultAsync(x => x.Id == model.RestaurantId);
 
-            var reservations = _context.Reservations.AsNoTracking()
-                                                    .Where(predicate)
-                                                    .Select(r => new ReserveTableDTO
-                                                    {
-                                                        UserId = r.User.Id,
-                                                        TableId = r.Table.Id,
-                                                    });
-
-
-            var plan = await _context.Restaurants.AsNoTracking()
-                                                 .Select(restaurant => new RestaurantPlanDTO
-                                                 {
-                                                     Id = restaurant.Id,
-                                                     Scheme = restaurant.Template.Image,
-                                                     BeginWorkTime = restaurant.BeginWorkTime,
-                                                     EndWorkTime = restaurant.EndWorkTime,
-                                                     Tables = restaurant.Template.Tables.Select(t => new TableDTO
-                                                     {
-                                                         Id = t.Id,
-                                                         Height = t.Template.Height,
-                                                         Width = t.Template.Width,
-                                                         Rotation = t.Template.Rotation,
-                                                         X = t.X,
-                                                         Y = t.Y,
-                                                         State = CheckState(reservations, t.Id, userId),
-                                                     }).ToArray()
-                                                 }).SingleOrDefaultAsync(r => r.Id == model.RestaurantId);
-
-            if (plan is null)
+            if (restaurant is null)
                 return Result.Fail("Ресторан не найден");
+
+            var reservations = await _context.Entry(restaurant)
+                 .Collection(x => x.Reservations)
+                 .Query()                   
+                 .Where(r => !r.Canceled
+                             && r.ReservationStart < model.ReservationEndDate
+                             && model.ReservationStartDate < r.ReservationEnd)
+                 .Select(r => new ReservationDTO
+                 {
+                     Id = r.Id,
+                     UserId = r.User.Id,
+                     TableId = r.Table.Id,
+                 }).ToListAsync();
+
+            var tables = await _context.Entry(restaurant.Template)
+                .Collection(x => x.Tables)
+                .Query()
+                .Select(t => new ReservationTableDTO
+                {
+                    Id = t.Id,
+                    Height = t.Template.Height,
+                    Width = t.Template.Width,
+                    Rotation = t.Template.Rotation,
+                    X = t.X,
+                    Y = t.Y,
+                }).ToListAsync();
+
+            foreach (var table in tables)
+            {
+                var reservation = reservations.FirstOrDefault(x => x.TableId == table.Id);
+
+                if (reservation is null)
+                {
+                    table.State = TableStates.Avaible;
+
+                    continue;
+                }
+
+                table.State = reservation.UserId == userId ? TableStates.OccupiedByUser : TableStates.OccupiedByOther;
+                table.ReservationId = reservation.Id;
+            }
+
+            var plan = new RestaurantPlanDTO
+            {
+                Id = restaurant.Id,
+                Scheme = restaurant.Template.Image,
+                BeginWorkTime = restaurant.BeginWorkTime,
+                EndWorkTime = restaurant.EndWorkTime,
+                Tables = tables,
+            };
 
             return Result.Ok(plan);
         }
@@ -214,16 +234,12 @@ namespace Restorator.Application.Services
 
             return Result.Ok(restaurant.Id);
         }
-        private static TableStates CheckState(IEnumerable<ReserveTableDTO> reserveTable, int tableId, int userId)
+
+        public class ReservationDTO
         {
-            var reservation = reserveTable.FirstOrDefault(r => r.TableId == tableId);
-
-            if (reservation is null)
-                return TableStates.Avaible;
-            else if (reservation.UserId == userId)
-                return TableStates.OccupiedByUser;
-
-            return TableStates.OccupiedByOther;
+            public int Id { get; set; }
+            public int UserId { get; set; }
+            public int TableId { get; set; }
         }
     }
 }

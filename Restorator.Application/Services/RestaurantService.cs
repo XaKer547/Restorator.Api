@@ -103,6 +103,12 @@ namespace Restorator.Application.Services
             var user = await _context.Users.AsNoTracking()
                                            .SingleOrDefaultAsync(u => u.Id == userId);
 
+
+            var nameTaken = await _context.Restaurants.AnyAsync(x => x.Name == model.Name);
+
+            if (nameTaken)
+                return Result.Fail("Ресторан с таким именем уже существует");
+
             if (user == null)
                 return Result.Fail("Пользователя не существует");
 
