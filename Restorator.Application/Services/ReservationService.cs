@@ -129,7 +129,7 @@ namespace Restorator.Application.Services
 
             var reservations = await _context.Entry(restaurant)
                  .Collection(x => x.Reservations)
-                 .Query()                   
+                 .Query()
                  .Where(r => !r.Canceled
                              && r.ReservationStart < model.ReservationEndDate
                              && model.ReservationStartDate < r.ReservationEnd)

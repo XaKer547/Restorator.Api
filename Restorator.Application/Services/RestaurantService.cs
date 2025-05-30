@@ -100,8 +100,8 @@ namespace Restorator.Application.Services
             if (!_userManager.TryGetUserId(out var userId))
                 return Result.Fail("Не удалось получить id пользователя");
 
-            var user = await _context.Users.AsNoTracking()
-                                           .SingleOrDefaultAsync(u => u.Id == userId);
+            var userExists = await _context.Users.AsNoTracking()
+                                                 .AnyAsync(u => u.Id == userId);
 
 
             var nameTaken = await _context.Restaurants.AnyAsync(x => x.Name == model.Name);
@@ -109,32 +109,30 @@ namespace Restorator.Application.Services
             if (nameTaken)
                 return Result.Fail("Ресторан с таким именем уже существует");
 
-            if (user == null)
+            if (!userExists)
                 return Result.Fail("Пользователя не существует");
-
-            var tags = _context.RestaurantTags.AsNoTracking()
-                                              .Where(t => model.Tags.Contains(t.Id));
 
             var imagesInfo = await _restaurantFilesManager.CreateRestaurantFolder(model.Name, model.Images, model.Menu);
 
-            var restaurant = new Restaurant()
+            var restaurant = new Restaurant
             {
-                Owner = user,
+                OwnerId = userId,
+                TemplateId = model.TemplateId,
                 Name = model.Name,
                 Description = model.Description,
                 BeginWorkTime = model.BeginWorkTime,
                 EndWorkTime = model.EndWorkTime,
-                TemplateId = model.TemplateId,
                 Images = [.. imagesInfo.ImagesPath.Select(x => new RestaurantImage() { Image = x })],
                 MenuImage = imagesInfo.MenuPath,
-                Tags = [.. tags]
+                Tags = await _context.RestaurantTags.Where(t => model.Tags.Contains(t.Id))
+                                                    .ToListAsync(),
             };
 
             _context.Restaurants.Add(restaurant);
 
             await _context.SaveChangesAsync();
 
-            return Result.Ok(restaurant.Id);
+            return Result.Ok();
         }
         public async Task<Result<RestaurantInfoDTO>> GetRestaurantInfo(int restaurantId)
         {
@@ -217,23 +215,20 @@ namespace Restorator.Application.Services
 
             var imagesInfo = await _restaurantFilesManager.UpdateRestaurantFolder(model.Name, model.Images, model.Menu);
 
+            var restaurantEntry = _context.Entry(restaurant);
+
+            await restaurantEntry.Collection(x => x.Tags)
+                                 .LoadAsync();
+
+            await restaurantEntry.Collection(x => x.Images)
+                                 .LoadAsync();
+
             restaurant.Images = [.. imagesInfo.ImagesPath.Select(x => new RestaurantImage() { Image = x })];
 
             restaurant.MenuImage = imagesInfo.MenuPath;
 
-            var tags = await _context.RestaurantTags.AsNoTracking()
-                                                    .Where(t => model.Tags.Contains(t.Id))
-                                                    .ToListAsync();
-
-            restaurant.Tags.Clear();
-
-            foreach (var tag in tags)
-            {
-                if (restaurant.Tags.Any(t => t.Id == tag.Id))
-                    continue;
-
-                restaurant.Tags.Add(tag);
-            }
+            restaurant.Tags = await _context.RestaurantTags.Where(t => model.Tags.Contains(t.Id))
+                                                           .ToListAsync();
 
             _context.Restaurants.Update(restaurant);
 
@@ -290,7 +285,8 @@ namespace Restorator.Application.Services
             if (!roles.Contains(user.Role))
                 return Result.Fail("Недостаточно прав для выполнения операции");
 
-            var restaurant = await _context.Restaurants.SingleOrDefaultAsync(r => r.Id == restaurantId);
+            var restaurant = await _context.Restaurants.Include(x => x.Owner)
+                                                       .SingleOrDefaultAsync(r => r.Id == restaurantId);
 
             if (restaurant is null)
                 return Result.Fail("Ресторан не найден");
