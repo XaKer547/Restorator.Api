@@ -46,8 +46,8 @@ namespace Restorator.Application.Services
                 Tables = [.. model.Tables.Select(x => new Table()
                 {
                     TableTemplateId = x.TemplateId,
-                    X = x.X,
-                    Y = x.Y,
+                    X = (float)x.X,
+                    Y = (float)x.Y,
                 })]
             };
 
