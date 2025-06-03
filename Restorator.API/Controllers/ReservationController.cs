@@ -57,7 +57,7 @@ namespace Restorator.API.Controllers
         [ProducesResponseType<IReadOnlyCollection<ReservationInfoDTO>>(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
-        public async Task<IActionResult> GetReservations([Required] DateOnly selectedDate, int restaurantId, int userId, bool skipCanceled)
+        public async Task<IActionResult> GetReservations([Required] DateOnly selectedDate, int? restaurantId, int? userId, bool? skipCanceled)
         {
             var result = await _reservationService.GetReservations(new GetReservationsDTO()
             {
