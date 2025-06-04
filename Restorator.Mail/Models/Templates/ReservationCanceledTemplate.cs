@@ -2,10 +2,10 @@
 
 namespace Restorator.Mail.Models.Templates
 {
-    public class ReservationCanceledMailTemplate(string email,
+    public class ReservationCanceledTemplate(string email,
                                                  string username,
                                                  DateTime reservationDateTime,
-                                                 string restaurantName) : MailTemplateBase(nameof(ReservationCanceledMailTemplate), "Ваша бронь отменена", email)
+                                                 string restaurantName) : MailTemplateBase(nameof(ReservationCanceledTemplate), "Ваша бронь отменена", email)
     {
         public string Username { get; } = username;
         public DateTime ReservationDateTime { get; } = reservationDateTime;

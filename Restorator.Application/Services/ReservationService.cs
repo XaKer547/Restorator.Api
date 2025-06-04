@@ -50,7 +50,7 @@ namespace Restorator.Application.Services
             {
                 var template = await _context.Reservations.AsNoTracking()
                                                           .Where(r => r.Id == reservationId)
-                                                          .Select(r => new ReservationCanceledMailTemplate(r.User.Email,
+                                                          .Select(r => new ReservationCanceledTemplate(r.User.Email,
                                                                                                            r.User.Username,
                                                                                                            r.ReservationStart,
                                                                                                            r.Restaurant.Name)).SingleAsync();
