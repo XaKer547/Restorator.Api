@@ -235,6 +235,35 @@ namespace Restorator.Application.Services
             return Result.Ok(restaurant.Id);
         }
 
+        public async Task<Result<IReadOnlyCollection<ReservationInfoDTO>>> GetOwnedReservations(GetOwnedReservationsDTO model)
+        {
+            if (!_userManager.TryGetUserId(out var userId))
+                return Result.Fail("Не удалось получить id пользователя");
+
+            var predicate = PredicateBuilder.New<Reservation>(r => r.User.Id == userId && r.ReservationEnd.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue)
+                                                                  || r.ReservationStart.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue));
+
+            if (model.RestaurantId.HasValue)
+                predicate = predicate.And(r => r.Restaurant.Id == model.RestaurantId);
+
+            if (model.SkipCanceled.HasValue)
+                predicate = predicate.And(r => r.Canceled != model.SkipCanceled.Value);
+
+            return await _context.Reservations.AsNoTracking()
+                                              .Where(predicate)
+                                              .Select(r => new ReservationInfoDTO
+                                              {
+                                                  Id = r.Id,
+                                                  UserId = r.User.Id,
+                                                  Username = r.User.Username,
+                                                  RestaurantId = r.Restaurant.Id,
+                                                  RestaurantName = r.Restaurant.Name,
+                                                  ReservationStart = r.ReservationStart,
+                                                  ReservationEnd = r.ReservationEnd,
+                                                  Canceled = r.Canceled
+                                              }).ToListAsync();
+        }
+
         public class ReservationDTO
         {
             public int Id { get; set; }

@@ -53,7 +53,7 @@ namespace Restorator.API.Controllers
         /// Получить бронирования
         /// </summary>
         /// <returns></returns>
-        [HttpGet, Authorize(Roles = "User,Manager")]
+        [HttpGet, Authorize(Roles = "Manager")]
         [ProducesResponseType<IReadOnlyCollection<ReservationInfoDTO>>(200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(401)]
@@ -63,6 +63,30 @@ namespace Restorator.API.Controllers
             {
                 RestaurantId = restaurantId,
                 UserId = userId,
+                SelectedDate = selectedDate,
+                SkipCanceled = skipCanceled
+            });
+
+            if (result.IsFailed)
+                return BadRequest(result.Errors);
+
+            return Ok(result.Value);
+        }
+
+
+        /// <summary>
+        /// Получить бронирования
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("owned"), Authorize(Roles = "User")]
+        [ProducesResponseType<IReadOnlyCollection<ReservationInfoDTO>>(200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<IActionResult> GetOwnedReservations([Required] DateOnly selectedDate, int? restaurantId, bool? skipCanceled)
+        {
+            var result = await _reservationService.GetOwnedReservations(new GetOwnedReservationsDTO()
+            {
+                RestaurantId = restaurantId,
                 SelectedDate = selectedDate,
                 SkipCanceled = skipCanceled
             });
