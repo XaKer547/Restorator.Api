@@ -240,8 +240,8 @@ namespace Restorator.Application.Services
             if (!_userManager.TryGetUserId(out var userId))
                 return Result.Fail("Не удалось получить id пользователя");
 
-            var predicate = PredicateBuilder.New<Reservation>(r => r.User.Id == userId && r.ReservationEnd.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue)
-                                                                  || r.ReservationStart.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue));
+            var predicate = PredicateBuilder.New<Reservation>(r => r.User.Id == userId && (r.ReservationEnd.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue)
+                                                                  || r.ReservationStart.Date == model.SelectedDate.ToDateTime(TimeOnly.MinValue)));
 
             if (model.RestaurantId.HasValue)
                 predicate = predicate.And(r => r.Restaurant.Id == model.RestaurantId);
