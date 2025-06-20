@@ -11,7 +11,7 @@ namespace Restorator.API.Services
             _enviroment = enviroment;
         }
 
-        public async Task<RestaurantFilesInfoDTO> CreateRestaurantFolder(string restaurantName, IEnumerable<byte[]> images, byte[] menu)
+        public async Task<RestaurantFilesInfoDTO> CreateRestaurantFolder(string restaurantName, IEnumerable<byte[]>? images, byte[] menu)
         {
             var path = GetPath(restaurantName);
 
@@ -28,7 +28,7 @@ namespace Restorator.API.Services
             };
         }
 
-        public async Task<RestaurantFilesInfoDTO> UpdateRestaurantFolder(string restaurantName, IEnumerable<byte[]> images, byte[] menu)
+        public async Task<RestaurantFilesInfoDTO> UpdateRestaurantFolder(string restaurantName, IEnumerable<byte[]>? images, byte[] menu)
         {
             var path = GetPath(restaurantName);
 
@@ -70,9 +70,12 @@ namespace Restorator.API.Services
 
             return fileName;
         }
-        private async Task<IEnumerable<string>> UploadImagesAsync(string dirPath, IEnumerable<byte[]> images)
+        private async Task<IEnumerable<string>> UploadImagesAsync(string dirPath, IEnumerable<byte[]>? images)
         {
             var names = new List<string>();
+
+            if (images is null)
+                return names;
 
             foreach (var image in images)
             {
