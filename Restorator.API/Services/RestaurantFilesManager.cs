@@ -32,6 +32,9 @@ namespace Restorator.API.Services
         {
             var path = GetPath(restaurantName);
 
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
             var files = Directory.GetFiles(path);
 
             foreach (var file in files)
