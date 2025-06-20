@@ -189,7 +189,16 @@ namespace Restorator.Application.Services
             if (result.IsFailed)
                 return result.ToResult();
 
-            _context.Restaurants.Remove(result.Value);
+
+            var restaurant = result.Value;
+
+            await _context.Entry(restaurant)
+                          .Collection(x => x.Images)
+                          .LoadAsync();
+
+            _context.RestaurantImages.RemoveRange(restaurant.Images);
+
+            _context.Restaurants.Remove(restaurant);
 
             await _context.SaveChangesAsync();
 

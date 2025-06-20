@@ -11,6 +11,7 @@ namespace Restorator.DataAccess.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Reservation> Reservations => Set<Reservation>();
         public DbSet<Restaurant> Restaurants => Set<Restaurant>();
+        public DbSet<RestaurantImage> RestaurantImages => Set<RestaurantImage>();
         public DbSet<RestaurantTag> RestaurantTags => Set<RestaurantTag>();
         public DbSet<RestaurantTemplate> RestaurantTemplates => Set<RestaurantTemplate>();
         public DbSet<Table> Tables => Set<Table>();
