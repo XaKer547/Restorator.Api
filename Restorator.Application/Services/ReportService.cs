@@ -94,7 +94,7 @@ namespace Restorator.Application.Services
                 Finished = reservationStatuses.Finished,
                 Reserved = reservationStatuses.Waiting,
                 IsEmpty = false,
-                MostPopularDay = CultureInfo.CurrentCulture.DateTimeFormat.GetDayName((DayOfWeek)mostPopularDay - 1)
+                MostPopularDay = CultureInfo.CurrentCulture.DateTimeFormat.GetDayName((DayOfWeek)mostPopularDay)
             };
         }
 
