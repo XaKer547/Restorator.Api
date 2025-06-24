@@ -56,9 +56,18 @@ namespace Restorator.Application.Services
                     IsEmpty = true
                 };
 
-            var mostPopularDay = await restaurantDayReservations.OrderByDescending(x => x.Count)
-                                                                .Select(x => x.DayOfWeek)
-                                                                .FirstAsync();
+            var reservations = restaurantDailyReservations.Select(x => x.Reservations)
+                .ToList();
+
+            var mostDaysReservation = reservations[0];
+
+            foreach (var item in reservations.Skip(1))
+            {
+                mostDaysReservation = mostDaysReservation.Zip(item, (x, y) => x + y);
+            }
+
+            var mostPopularDay = mostDaysReservation.Select((x, i) => new { Index = i + 1, Value = x })
+                .OrderByDescending(x => x.Value).First().Index;
 
             var mostPopularRestaurant = restaurantDailyReservations.Select(x => new MonthPopularRestaurantReportDTO
             {
